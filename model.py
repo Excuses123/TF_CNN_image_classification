@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def inference(image,batch_size,n_classes):
+def inference(image,batch_size,n_classes,keep_prob):
     #conv1.shape = [kernel_size,kernel_size,channel,kernel_number]
     with tf.variable_scope("conv1") as scope:
         weights = tf.get_variable("weights",
@@ -53,6 +53,9 @@ def inference(image,batch_size,n_classes):
                                  initializer=tf.constant_initializer(0.1))
         fc1 = tf.nn.relu(tf.matmul(reshape,weights) + biases,name="fc1")
 
+        # # 这里使用了drop out,即随机安排一些cell输出值为0，可以防止过拟合
+        # fc1 = tf.nn.dropout(fc1, keep_prob)
+
     #full-connect2
     with tf.variable_scope("fc2") as scope:
         weights = tf.get_variable("weights",
@@ -64,6 +67,9 @@ def inference(image,batch_size,n_classes):
                                  dtype=tf.float32,
                                  initializer=tf.constant_initializer(0.1))
         fc2 = tf.nn.relu(tf.matmul(fc1,weights) + biases,name="fc2")
+
+        # # 这里使用了drop out,即随机安排一些cell输出值为0，可以防止过拟合
+        # fc2 = tf.nn.dropout(fc2, keep_prob)
 
     #softmax
     with tf.variable_scope("softmax_linear") as scope:

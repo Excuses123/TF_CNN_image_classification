@@ -13,6 +13,7 @@ MAX_STEP = 1000
 #迭代一千次，如果机器配置好的话，建议至少10000次以上
 learning_rate = 0.0001
 #学习率
+KEEP_PROB = 0.5
 
 
 if __name__ == '__main__':
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     train,train_label = get_files(train_dir)
     train_batch,train_label_batch = get_batch(train,train_label,IMAGE_WEIGHT,IMAGE_HEIGHT,BATCH_SIZE,CAPACITY)
 
-    train_logits = inference(train_batch,BATCH_SIZE,N_CLASSES)
+    train_logits = inference(train_batch,BATCH_SIZE,N_CLASSES,KEEP_PROB)
     train_loss = losses(train_logits,train_label_batch)
     train_op = training(train_loss,learning_rate)
     train_acc = evaluate(train_logits,train_label_batch)
