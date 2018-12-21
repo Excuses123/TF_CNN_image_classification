@@ -79,7 +79,7 @@ def test(test_file):
         image = tf.image.per_image_standardization(image)
         image = tf.reshape(image,[1,208,208,3])
         print(image.shape)
-        p = inference(image,1,2)
+        p = inference(image,1,2,0.5)
         logits = tf.nn.softmax(p)
         x = tf.placeholder(tf.float32,shape=[208,208,3])
         saver = tf.train.Saver()
