@@ -39,6 +39,7 @@ if __name__ == '__main__':
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess = sess,coord = coord)
 
+
     try:
         for step in np.arange(MAX_STEP):
             if coord.should_stop():
