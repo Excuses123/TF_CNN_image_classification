@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 from model import *
 import matplotlib.pyplot as plt
+import random
 
 def get_files(file_dir):
     #分两类
@@ -61,47 +62,55 @@ def get_batch(image,label,image_W,image_H,batch_size,capacity):
     #获取两个batch，两个batch即为传入神经网络的数据
 
 
-def get_one_image(img_dir):
+def get_one_image(img_dir,W,H):
     image = Image.open(img_dir)
     # Image.open()
     # 好像一次只能打开一张图片，不能一次打开一个文件夹，这里大家可以去搜索一下
     plt.imshow(image)
-    image = image.resize([208, 208])
+    image = image.resize([W, H])
     image_arr = np.array(image)
     return image_arr
 
-def test(test_file):
+def next_batch(image_list, label_list,IMAGE_WEIGHT,IMAGE_HEIGHT, batch_size):
+    index = [ i for i in range(0,len(label_list)) ]
+    np.random.shuffle(index);
+    batch_data = [];
+    batch_target = [];
+    for i in range(0,batch_size):
+        image_arr = get_one_image(image_list[index[i]], IMAGE_WEIGHT, IMAGE_HEIGHT)
+        batch_data.append(image_arr)
+        batch_target.append(label_list[index[i]])
+
+    return np.array(batch_data), batch_target
+
+
+def test(model,test_file):
     log_dir = "./log/"
-    image_arr = get_one_image(test_file)
+    image_arr = get_one_image(test_file,512,512)
+    image_arr = image_arr.reshape([1,512,512,3])
+    res = ["猫","狗"]
 
-    with tf.Graph().as_default():
-        image = tf.cast(image_arr,tf.float32)
-        image = tf.image.per_image_standardization(image)
-        image = tf.reshape(image,[1,208,208,3])
-        print(image.shape)
-        p = inference(image,1,2,0.5)
-        logits = tf.nn.softmax(p)
-        x = tf.placeholder(tf.float32,shape=[208,208,3])
-        saver = tf.train.Saver()
-        with tf.Session() as sess:
-            ckpt = tf.train.get_checkpoint_state(log_dir)
-            if ckpt and ckpt.model_checkpoint_path:
-                global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
-                saver.restore(sess,ckpt.model_checkpoint_path)
-                #调用saver.restore()函数,加载训练好的网络模型
+    saver = tf.train.Saver(max_to_keep=5)
+    with tf.Session() as sess:
+        ckpt = tf.train.get_checkpoint_state(log_dir)
+        if ckpt and ckpt.model_checkpoint_path:
+            global_step = ckpt.model_checkpoint_path.split('/')[-1].split('-')[-1]
+            saver.restore(sess,ckpt.model_checkpoint_path)
+            #调用saver.restore()函数,加载训练好的网络模型
 
-                print("Loading success")
-            else:
-                print("No checkpoint")
-            prediction = sess.run(logits,feed_dict={x: image_arr})
-            max_index = np.argmax(prediction)
-            print('预测的标签为：',max_index)
-            print('预测的结果为：',prediction)
+            print("Loading success")
+        else:
+            print("No checkpoint")
+        prediction = sess.run(model.logits,feed_dict={model.X: image_arr, model.keep_prob:1})
+        max_index = np.argmax(prediction)
+        print('预测的标签为：',max_index)
+        print('预测的概率为：',prediction)
+        print('预测的结果为：',res[max_index])
 
-        if max_index == 0:
-            print('This is a cat with possibility %.6f' % prediction[:, 0])
-        elif max_index == 1:
-            print('This is a dog with possibility %.6f' % prediction[:, 1])
+    if max_index == 0:
+        print('This is a cat with possibility %.6f' % prediction[:, 0])
+    elif max_index == 1:
+        print('This is a dog with possibility %.6f' % prediction[:, 1])
 
 
 

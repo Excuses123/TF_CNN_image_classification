@@ -1,57 +1,51 @@
 from data_helper import *
-from model import *
-
-
-N_CLASSES = 2
-#要分类的类别数，这里是2分类
-IMAGE_WEIGHT = 208
-IMAGE_HEIGHT = 208
-#设置图片的size
-BATCH_SIZE = 8
-CAPACITY = 64
-MAX_STEP = 1000
-#迭代一千次，如果机器配置好的话，建议至少10000次以上
-learning_rate = 0.0001
-#学习率
-KEEP_PROB = 0.5
+from model import CNN
 
 
 if __name__ == '__main__':
-
     train_dir = "./data/train/"
+    # 存放一些模型文件的目录
     log_train_dir = "./log/"
-    #存放一些模型文件的目录
 
-    train,train_label = get_files(train_dir)
-    train_batch,train_label_batch = get_batch(train,train_label,IMAGE_WEIGHT,IMAGE_HEIGHT,BATCH_SIZE,CAPACITY)
+    config = {}
+    # 要分类的类别数，这里是2分类
+    config['N_CLASSES'] = 2
+    # 设置图片的size
+    config['IMAGE_WEIGHT'] = 512
+    config['IMAGE_HEIGHT'] = 512
+    config['BATCH_SIZE'] = 12
+    # 学习率
+    config['lr'] = 0.0001
+    # 迭代一千次，如果机器配置好的话，建议至少10000次以上
+    MAX_STEP = 1000
 
-    train_logits = inference(train_batch,BATCH_SIZE,N_CLASSES,KEEP_PROB)
-    train_loss = losses(train_logits,train_label_batch)
-    train_op = training(train_loss,learning_rate)
-    train_acc = evaluate(train_logits,train_label_batch)
+    image_list, label_list = get_files(train_dir)
 
-    summary_op = tf.summary.merge_all()
+    model = CNN(config)
+    model.bulid_graph()
+
     sess = tf.Session()
+    summary_op = tf.summary.merge_all()
     train_writer = tf.summary.FileWriter(log_train_dir,sess.graph)
-    saver = tf.train.Saver()
-
-    sess.run(tf.global_variables_initializer())
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess = sess,coord = coord)
-
+    saver = tf.train.Saver(max_to_keep=5)
+    sess.run(tf.global_variables_initializer())
 
     try:
         for step in np.arange(MAX_STEP):
             if coord.should_stop():
                 break
-            _,tra_loss,tra_acc = sess.run([train_op,train_loss,train_acc])
+            train_batch, train_label_batch = next_batch(image_list, label_list, config['IMAGE_WEIGHT'], config['IMAGE_HEIGHT'], config['BATCH_SIZE'])
+            feed_dict = {model.X:train_batch, model.Y:train_label_batch, model.keep_prob:0.5}
+            _,tra_loss,tra_acc = sess.run([model.train_op, model.train_loss, model.train_acc], feed_dict = feed_dict)
             if step % 50 == 0:
-                print('Step %d,train loss = %.5f,train accuracy = %.5f' % (step, tra_loss, tra_acc))
                 # 每迭代50次，打印出一次结果
-                summary_str = sess.run(summary_op)
-                train_writer.add_summary(summary_str,step)
+                print('Step %d,train loss = %.5f,train accuracy = %.5f' % (step, tra_loss, tra_acc))
+                # summary_str = sess.run(summary_op)
+                # train_writer.add_summary(summary_str,step)
 
-            if step % 200 == 0 or (step+1) == MAX_STEP:
+            if step % 1000 == 0 or (step+1) == MAX_STEP:
                 checkpoint_path = os.path.join(log_train_dir,'model.ckpt')
                 saver.save(sess,checkpoint_path,global_step=step)
                 # 每迭代200次，利用saver.save()保存一次模型文件，以便测试的时候使用
