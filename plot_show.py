@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 
 BATCH_SIZE = 5
 CAPACITY = 64
-IMAGE_WEIGHT = 1024
-IMAGE_HEIGHT = 1024
+IMAGE_WEIGHT = 256
+IMAGE_HEIGHT = 256
 
 train_dir = "./data/train/"
 
 image_list,label_list = get_files(train_dir)
-image_batch,label_batch = get_batch(image_list,label_list,IMAGE_WEIGHT,IMAGE_HEIGHT,BATCH_SIZE,CAPACITY)
+image_batch,label_batch = get_batch(image_list,label_list,IMAGE_WEIGHT,IMAGE_HEIGHT,BATCH_SIZE,CAPACITY,is_show = True)
 
 
 with tf.Session() as sess:

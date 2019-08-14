@@ -36,7 +36,7 @@ def get_files(file_dir):
 
     return image_list,label_list
 
-def get_batch(image,label,image_W,image_H,batch_size,capacity):
+def get_batch(image,label,image_W,image_H,batch_size,capacity,is_show = False):
     image = tf.cast(image,tf.string)
     label = tf.cast(label,tf.int32)
     #tf.cast用来做数据转换
@@ -52,10 +52,11 @@ def get_batch(image,label,image_W,image_H,batch_size,capacity):
     image = tf.image.resize_image_with_crop_or_pad(image,image_W,image_H)
     #resize
 
-    image = tf.image.per_image_standardization(image)
+    if not is_show:
+        image = tf.image.per_image_standardization(image)
     #对resize后的图片进行标准化处理
 
-    image_batch,label_batch = tf.train.batch([image,label],batch_size=batch_size,num_threads=16,capacity=capacity)
+    image_batch,label_batch = tf.train.batch([image,label],batch_size=batch_size,num_threads=4,capacity=capacity)
     label_batch = tf.reshape(label_batch,[batch_size])
 
     return image_batch,label_batch
@@ -86,8 +87,8 @@ def next_batch(image_list, label_list,IMAGE_WEIGHT,IMAGE_HEIGHT, batch_size):
 
 def test(model,test_file):
     log_dir = "./log/"
-    image_arr = get_one_image(test_file,512,512)
-    image_arr = image_arr.reshape([1,512,512,3])
+    image_arr = get_one_image(test_file,256,256)
+    image_arr = image_arr.reshape([1,256,256,3])
     res = ["猫","狗"]
 
     saver = tf.train.Saver(max_to_keep=5)

@@ -16,6 +16,7 @@ class CNN(object):
     def inference(self):
         #conv1.shape = [kernel_size,kernel_size,channel,kernel_number]
         with tf.variable_scope("conv1") as scope:
+            #[filter_height, filter_width, in_channels, out_channels]
             weights = tf.get_variable("weights",
                                       shape=[3,3,3,16],
                                       dtype=tf.float32,

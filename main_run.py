@@ -11,13 +11,13 @@ if __name__ == '__main__':
     # 要分类的类别数，这里是2分类
     config['N_CLASSES'] = 2
     # 设置图片的size
-    config['IMAGE_WEIGHT'] = 512
-    config['IMAGE_HEIGHT'] = 512
+    config['IMAGE_WEIGHT'] = 256
+    config['IMAGE_HEIGHT'] = 256
     config['BATCH_SIZE'] = 12
     # 学习率
     config['lr'] = 0.0001
     # 迭代一千次，如果机器配置好的话，建议至少10000次以上
-    MAX_STEP = 1000
+    MAX_STEP = 2000
 
     image_list, label_list = get_files(train_dir)
 
@@ -31,6 +31,8 @@ if __name__ == '__main__':
     threads = tf.train.start_queue_runners(sess = sess,coord = coord)
     saver = tf.train.Saver(max_to_keep=5)
     sess.run(tf.global_variables_initializer())
+
+    # tf.summary.FileWriter('improved_graph2', sess.graph)
 
     try:
         for step in np.arange(MAX_STEP):
